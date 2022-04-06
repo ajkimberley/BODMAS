@@ -1,0 +1,107 @@
+body {
+	font-family: Calibri, Segoe, "Segoe UI", "Gill Sans", "Gill Sans MT", sans-serif;
+}
+.tree {
+	list-style: none;
+	margin: 0;
+	padding: 0;
+	position: relative;
+	margin: 0 0 1em;
+	text-align: center;
+	display: table;
+	ul {
+		list-style: none;
+		margin: 0;
+		padding: 0;
+		position: relative;
+		display: table;
+		width: 100%;
+		&:before {
+			outline: solid 1px #666;
+			content: "";
+			height: .5em;
+			left: 50%;
+			position: absolute;
+			top: -.5em;
+		}
+	}
+	li {
+		list-style: none;
+		margin: 0;
+		padding: 0;
+		position: relative;
+		display: table-cell;
+		padding: .5em .5em;
+		vertical-align: top;
+		&:before {
+			outline: solid 1px #666;
+			content: "";
+			left: 0;
+			position: absolute;
+			right: 0;
+			top: 0;
+		}
+		&:first-child {
+			&:before {
+				left: 50%;
+			}
+		}
+		&:last-child {
+			&:before {
+				right: 50%;
+			}
+		}
+	}
+	code {
+		border: solid .1em #666;
+		border-radius: .2em;
+		display: inline-block;
+		margin: 0 .2em .5em;
+		padding: .2em .5em;
+		position: relative;
+		font-family: monaco, Consolas, 'Lucida Console', monospace;
+		&:before {
+			outline: solid 1px #666;
+			content: "";
+			height: .5em;
+			left: 50%;
+			position: absolute;
+			top: -.55em;
+		}
+	}
+	span {
+		border: solid .1em #666;
+		border-radius: .2em;
+		display: inline-block;
+		margin: 0 .2em .5em;
+		padding: .2em .5em;
+		position: relative;
+		&:before {
+			outline: solid 1px #666;
+			content: "";
+			height: .5em;
+			left: 50%;
+			position: absolute;
+			top: -.55em;
+		}
+	}
+	>li {
+		margin-top: 0;
+		&:before {
+			outline: none;
+		}
+		&:after {
+			outline: none;
+		}
+		>code {
+			&:before {
+				outline: none;
+			}
+		}
+		>span {
+			&:before {
+				outline: none;
+			}
+		}
+	}
+}

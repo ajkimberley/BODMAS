@@ -4,42 +4,29 @@ open Elmish
 open Fable.Remoting.Client
 open Shared
 
-type Model = { Todos: Todo list; Input: string }
+type Model = { Input: string; ProcessedInput: Result<Node,string> option }
 
 type Msg =
-    | GotTodos of Todo list
+    | ProcessInput
+    | ProcessedInput of Result<Node,string>
     | SetInput of string
-    | AddTodo
-    | AddedTodo of Todo
 
-let todosApi =
+let bodmasApi =
     Remoting.createApi ()
     |> Remoting.withRouteBuilder Route.builder
-    |> Remoting.buildProxy<ITodosApi>
+    |> Remoting.buildProxy<IBodmasApi>
 
 let init () : Model * Cmd<Msg> =
-    let model = { Todos = []; Input = "" }
-
-    let cmd =
-        Cmd.OfAsync.perform todosApi.getTodos () GotTodos
-
-    model, cmd
+    let model = { Input = ""; ProcessedInput = Option.None }
+    model, Cmd.none
 
 let update (msg: Msg) (model: Model) : Model * Cmd<Msg> =
     match msg with
-    | GotTodos todos -> { model with Todos = todos }, Cmd.none
-    | SetInput value -> { model with Input = value }, Cmd.none
-    | AddTodo ->
-        let todo = Todo.create model.Input
-
-        let cmd =
-            Cmd.OfAsync.perform todosApi.addTodo todo AddedTodo
-
+    | ProcessInput -> 
+        let cmd = Cmd.OfAsync.perform bodmasApi.processInput model.Input ProcessedInput
         { model with Input = "" }, cmd
-    | AddedTodo todo ->
-        { model with
-              Todos = model.Todos @ [ todo ] },
-        Cmd.none
+    | ProcessedInput result -> { model with ProcessedInput = Some result }, Cmd.none
+    | SetInput value -> { model with Input = value }, Cmd.none
 
 open Feliz
 open Feliz.Bulma
@@ -58,14 +45,41 @@ let navBrand =
         ]
     ]
 
-let containerBox (model: Model) (dispatch: Msg -> unit) =
-    Bulma.box [
-        Bulma.content [
-            Html.ol [
-                for todo in model.Todos do
-                    Html.li [ prop.text todo.Description ]
+let rec processBinaryNode (node: BinaryOperatorNode) =
+    Html.li [
+        prop.children [
+            Html.span node.Token
+            Html.ul [
+                processNode node.LHS
+                processNode node.RHS
             ]
         ]
+    ]
+
+and processNode (node: Node) : ReactElement =
+    match node with
+    | LeafNode node -> Html.li node.Token
+    | BinaryOperatorNode node -> processBinaryNode node
+
+let containerBox (model: Model) (dispatch: Msg -> unit) =
+    Bulma.box [
+        match model.ProcessedInput with
+        | Some (Ok node) ->
+            Bulma.content [
+                prop.style [
+                    style.marginLeft length.auto
+                    style.marginRight length.auto
+                ]
+                prop.children[
+                    Html.ul [
+                        prop.className "tree"
+                        prop.children [
+                            processNode node
+                        ]
+                    ]
+                ]
+            ]
+        | _ -> Html.div "No Content"
         Bulma.field.div [
             field.isGrouped
             prop.children [
@@ -74,7 +88,7 @@ let containerBox (model: Model) (dispatch: Msg -> unit) =
                     prop.children [
                         Bulma.input.text [
                             prop.value model.Input
-                            prop.placeholder "What needs to be done?"
+                            prop.placeholder "Enter an arithmetic expression."
                             prop.onChange (fun x -> SetInput x |> dispatch)
                         ]
                     ]
@@ -82,9 +96,8 @@ let containerBox (model: Model) (dispatch: Msg -> unit) =
                 Bulma.control.p [
                     Bulma.button.a [
                         color.isPrimary
-                        prop.disabled (Todo.isValid model.Input |> not)
-                        prop.onClick (fun _ -> dispatch AddTodo)
-                        prop.text "Add"
+                        prop.onClick (fun _ -> dispatch ProcessInput)
+                        prop.text "Parse"
                     ]
                 ]
             ]
@@ -97,7 +110,6 @@ let view (model: Model) (dispatch: Msg -> unit) =
         color.isPrimary
         prop.style [
             style.backgroundSize "cover"
-            style.backgroundImageUrl "https://unsplash.it/1200/900?random"
             style.backgroundPosition "no-repeat center center fixed"
         ]
         prop.children [
@@ -115,6 +127,10 @@ let view (model: Model) (dispatch: Msg -> unit) =
                             Bulma.title [
                                 text.hasTextCentered
                                 prop.text "BODMAS"
+                            ]
+                            Bulma.subtitle [
+                                text.hasTextCentered
+                                prop.text "(Brackets, Ordinals, Division, Multipllication, Addition, Subtraction)"
                             ]
                             containerBox model dispatch
                         ]

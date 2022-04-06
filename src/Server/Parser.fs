@@ -1,6 +1,6 @@
 module BODMAS.Server.Parser
 
-open BODMAS.Server.Types
+open Shared
 open BODMAS.Server.Tokenizer
 
 let write (input: string) =
@@ -17,8 +17,7 @@ let rec parseElement (tokens: Token list) (minPrecLevel: int) : Result<Node, str
         let numNode = LeafNode { Token = head.Element }
         Ok numNode, tail
     | head :: tail when head.Type = LeftBracket ->
-        write "found a bracket"
-        let value = parseExpression minPrecLevel tail
+        let value = parseExpression 1 tail
         match value with
         | Ok value, head :: tail ->
             if (not (head.Type = RightBracket)) then Error "Unmatched bracket", tail
@@ -33,15 +32,12 @@ and parseInner (lhs: Node) (minPrecLevel: int) (tokens: Token list) =
     | head :: tail -> 
         if head.PrecedenceLevel < minPrecLevel 
         then 
-            write "head prec was < than minPrec - escaping parseInner"
             Ok lhs, tokens
         else
-            write "haed prec was >= minPrec - looping inner"
-            let rhsResult = parseExpression (getNextMinLevel head) tail // (2, + 3)
+            let rhsResult = parseExpression (getNextMinLevel head) tail
             match rhsResult with
             | Ok rhs, remainder -> 
                 let newLhs = BinaryOperatorNode { LHS = lhs; RHS = rhs; Token = head.Element }
-                write $"looping back in parse inner with newLhs = {newLhs} and remainder = {remainder} and minPrecLevel = {minPrecLevel}"
                 parseInner newLhs (minPrecLevel) remainder
             | Error err, remainder -> Error err, remainder
     | [] -> Ok lhs, [] 
@@ -54,12 +50,11 @@ and parseExpression (minPrecLevel: int) (tokens: Token list) : Result<Node, stri
         parseInner lhs minPrecLevel remainder
     | Error err, remainder -> Error err, remainder
 
-let parse (input: string) : Node =
+let parse (input: string) : Result<Node, string> =
     let scanResult = scan input
 
     match scanResult with
-    | Ok tokens ->
-        match parseExpression 1 tokens with
-        | Ok result, _ -> result
-        | Error err, _ -> failwith err
-    | Error err -> failwith err
+    | Ok tokens -> 
+        let (parseResult, _) = parseExpression 1 tokens
+        parseResult
+    | Error err -> Error err

@@ -1,8 +1,8 @@
 module BODMAS.Server.Tokenizer
 
 open System
-open BODMAS.Server.Types
-open BODMAS.Server.Types.Token
+open Shared
+open Shared.Token
 
 let getToken (input: char list) : Result<Token, string> =
     match input with
