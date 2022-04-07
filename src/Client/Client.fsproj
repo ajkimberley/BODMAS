@@ -5,7 +5,6 @@
     <DefineConstants>FABLE_COMPILER</DefineConstants>
   </PropertyGroup>
   <ItemGroup>
-    <Compile Include="Stylesheet.fs" />
     <None Include="index.html" />
     <None Include="paket.references" />
     <Compile Include="Index.fs" />

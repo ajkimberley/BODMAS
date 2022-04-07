@@ -3,9 +3,6 @@ module BODMAS.Server.Parser
 open Shared
 open BODMAS.Server.Tokenizer
 
-let write (input: string) =
-    System.Console.WriteLine(input)
-
 let getNextMinLevel (token: Token) =
     match token.Associativity with
     | Left -> token.PrecedenceLevel + 1

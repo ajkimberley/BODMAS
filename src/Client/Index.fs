@@ -4,11 +4,13 @@ open Elmish
 open Fable.Remoting.Client
 open Shared
 
-type Model = { Input: string; ProcessedInput: Result<Node,string> option }
+type Model =
+    { Input: string
+      ProcessedInput: Result<Node, string> option }
 
 type Msg =
     | ProcessInput
-    | ProcessedInput of Result<Node,string>
+    | ProcessedInput of Result<Node, string>
     | SetInput of string
 
 let bodmasApi =
@@ -17,12 +19,15 @@ let bodmasApi =
     |> Remoting.buildProxy<IBodmasApi>
 
 let init () : Model * Cmd<Msg> =
-    let model = { Input = ""; ProcessedInput = Option.None }
+    let model =
+        { Input = ""
+          ProcessedInput = Option.None }
+
     model, Cmd.none
 
 let update (msg: Msg) (model: Model) : Model * Cmd<Msg> =
     match msg with
-    | ProcessInput -> 
+    | ProcessInput ->
         let cmd = Cmd.OfAsync.perform bodmasApi.processInput model.Input ProcessedInput
         { model with Input = "" }, cmd
     | ProcessedInput result -> { model with ProcessedInput = Some result }, Cmd.none
@@ -65,21 +70,11 @@ let containerBox (model: Model) (dispatch: Msg -> unit) =
     Bulma.box [
         match model.ProcessedInput with
         | Some (Ok node) ->
-            Bulma.content [
-                prop.style [
-                    style.marginLeft length.auto
-                    style.marginRight length.auto
-                ]
-                prop.children[
-                    Html.ul [
-                        prop.className "tree"
-                        prop.children [
-                            processNode node
-                        ]
-                    ]
-                ]
+            Html.ul [
+                prop.className "tree"
+                prop.children [ processNode node ]
             ]
-        | _ -> Html.div "No Content"
+        | _ -> Html.none
         Bulma.field.div [
             field.isGrouped
             prop.children [
@@ -130,7 +125,7 @@ let view (model: Model) (dispatch: Msg -> unit) =
                             ]
                             Bulma.subtitle [
                                 text.hasTextCentered
-                                prop.text "(Brackets, Ordinals, Division, Multipllication, Addition, Subtraction)"
+                                prop.text "(Brackets, Ordinals, Division, Multiplication, Addition, Subtraction)"
                             ]
                             containerBox model dispatch
                         ]
